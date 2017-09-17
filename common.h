@@ -135,7 +135,7 @@ u64 get_clocks_per_second(void);
 uint calc_elapsed_time(BOOL done);
 uint calc_elapsed_msec(BOOL done);
 char *get_system_message(void);
-char *get_system_message_errno(DWORD errcode);
+char *get_system_message(DWORD errcode);
 int syslog(const char *fmt, ...);
 int syslogW(const TCHAR *fmt, ...);
 char *show_error(int error_code);

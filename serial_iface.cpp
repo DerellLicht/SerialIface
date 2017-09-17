@@ -32,7 +32,7 @@ int send_serial_msg(char *txbfr, uint txbfr_len)
       // if (GetLastError() != ERROR_WRITE_FAULT) {
          // WriteFile failed, but isn't delayed. Report error and abort.
          dwWritten = GetLastError() ;
-         syslog("WriteFile: %s\n", get_system_message_errno(dwWritten)) ;
+         syslog("WriteFile: %s\n", get_system_message(dwWritten)) ;
          dwWritten = -dwWritten ;
          // fRes = false;
       }
@@ -57,7 +57,7 @@ int send_serial_msg(char *txbfr, uint txbfr_len)
             case WAIT_OBJECT_0:
                if (!GetOverlappedResult(h_com_port, &osWrite, (DWORD *) &dwWritten, FALSE)) {
                   dwWritten = GetLastError() ;
-                  syslog("GetOverlappedResult: %s\n", get_system_message_errno(dwWritten)) ;
+                  syslog("GetOverlappedResult: %s\n", get_system_message(dwWritten)) ;
                   dwWritten = -dwWritten ;
                }
                else {
@@ -73,7 +73,7 @@ int send_serial_msg(char *txbfr, uint txbfr_len)
                // This usually indicates a problem with the
                // OVERLAPPED structure's event handle.
                dwWritten = GetLastError() ;
-               syslog("Write (W4SO): %s\n", get_system_message_errno(dwWritten)) ;
+               syslog("Write (W4SO): %s\n", get_system_message(dwWritten)) ;
                dwWritten = -dwWritten ;
                done = TRUE ;
                break;
@@ -261,12 +261,15 @@ uint32_t uart_init(unsigned port_num, uint32_t baud_rate)
 }
 
 //*****************************************************************************
+unsigned uart_baud_rate = 115200 ;
+unsigned debug_level = 0 ;
+
 int init_serial_uart(void)
 {
    if (serial_uart_num == 0) {
       printf("serial uart is not initialized\n");
       return 1;
    }
-   return (int) uart_init(serial_uart_num, 3000000) ;
+   return (int) uart_init(serial_uart_num, uart_baud_rate) ;
 }
 

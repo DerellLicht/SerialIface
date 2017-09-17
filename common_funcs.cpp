@@ -640,10 +640,10 @@ static char * const snmp_error_msgs[9] = {
 //*************************************************************************************
 
 //*************************************************************
-//lint -esym(714, get_system_message_errno)
-//lint -esym(759, get_system_message_errno)
-//lint -esym(765, get_system_message_errno)
-char *get_system_message_errno(DWORD errcode)
+//lint -esym(714, get_system_message)
+//lint -esym(759, get_system_message)
+//lint -esym(765, get_system_message)
+char *get_system_message(DWORD errcode)
 {
    // static char msg[261] ;
    static char msg[1024] ;
@@ -705,7 +705,7 @@ char *get_system_message_errno(DWORD errcode)
 //*************************************************************
 char *get_system_message(void)
 {
-   return get_system_message_errno(GetLastError());
+   return get_system_message(GetLastError());
 }
 
 //********************************************************************
@@ -767,7 +767,7 @@ char *show_error(int error_code)
    if (ecode == 0)
       return message0 ;
    else
-      return get_system_message_errno(ecode) ;
+      return get_system_message(ecode) ;
 }  //lint !e843
 
 //**********************************************************************

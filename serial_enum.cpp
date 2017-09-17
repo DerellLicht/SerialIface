@@ -185,7 +185,7 @@ static unsigned port_enumerated(unsigned new_port)
 void add_new_port(unsigned new_port)
 {
    // SSerInfo_p si = new SSerInfo_t ;
-   SSerInfo_p si = malloc(sizeof(SSerInfo_t)) ;
+   SSerInfo_p si = (SSerInfo_p) malloc(sizeof(SSerInfo_t)) ;
    memset((char *) si, 0, sizeof(SSerInfo_t)) ;
    wsprintf(si->strDevPath, _T("COM%u"), new_port) ;
    wsprintf(si->strFriendlyName, _T("unknown device (COM%u)"), new_port) ;
@@ -205,7 +205,7 @@ void add_new_port(unsigned new_port)
 void add_new_port_name(unsigned new_port, TCHAR *pszFriendlyName)
 {
    // SSerInfo_p si = new SSerInfo_t ;
-   SSerInfo_p si = malloc(sizeof(SSerInfo_t)) ;
+   SSerInfo_p si = (SSerInfo_p) malloc(sizeof(SSerInfo_t)) ;
    memset((char *) si, 0, sizeof(SSerInfo_t)) ;
    // wsprintf(si->strDevPath, "COM%u", new_port) ;
    wsprintf(si->strDevPath, _T("COM%u"), new_port) ;
@@ -701,7 +701,7 @@ static BOOL EnumPortsWdm(void)
          if (bOk) {
             //  allocate initial struct
             // SSerInfo_p si = new SSerInfo_t ;
-            SSerInfo_p si = malloc(sizeof(SSerInfo_t)) ;
+            SSerInfo_p si = (SSerInfo_p) malloc(sizeof(SSerInfo_t)) ;
             memset((char *) si, 0, sizeof(SSerInfo_t)) ;
 
             // strncpy(si->strDevPath, pDetData->DevicePath, PATH_MAX);
@@ -942,7 +942,7 @@ int enumerate_serial_ports(void)
          (sptemp->bDeviceOpens) ? "YES" : "no",
          (sptemp->bEnumerates) ? "YES" : "no",
          // (sptemp->bUsbDevice) ? '+' : '-',
-         unicode2ascii(sptemp->strFriendlyName)
+         unicode2ascii((WCHAR*)sptemp->strFriendlyName)
          // ,(sptemp->strPortDesc[0] == 0) ? "unused" : sptemp->strPortDesc
          ) ;
    }

@@ -1,0 +1,4 @@
+*.o
+*.bak
+*.exe
+_lint.tmp
