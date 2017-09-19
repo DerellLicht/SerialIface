@@ -6,6 +6,11 @@
 #include "common.h"
 #include "serial_enum.h"
 
+//lint -esym(844, h_uart_rx_thread)
+
+//lint -esym(526, _beginthreadex)
+//lint -esym(628, _beginthreadex)
+
 //******************************************************************************
 unsigned uart_comm_num = 1 ;
 unsigned uart_baud_rate = 115200 ;
@@ -16,10 +21,10 @@ static HANDLE h_uart_rx_thread;
 // static HANDLE h_run_rx_thread;
 // static HANDLE h_rx_event = 0;
 
-static unsigned abort_thread = 0 ;
+unsigned abort_thread = 0 ;
 
 //****************************************************************************
-int send_serial_msg(char *txbfr, uint txbfr_len)
+static int send_serial_msg(char *txbfr, uint txbfr_len)
 {
    int dwWritten = 0;
 
@@ -91,6 +96,7 @@ int send_serial_msg(char *txbfr, uint txbfr_len)
    // }
 
    CloseHandle (writeEvent);
+   abort_thread = 0 ;
    return dwWritten;
 }
 
@@ -156,19 +162,10 @@ static unsigned __stdcall uart_rx_thread(void *p_args)
    } while (abort_thread == 0);
    CloseHandle (readEvent);
    return 0;   
-}
+}  //lint !e715  p_args
 
 //*****************************************************************************
-//lint -esym(714, abort_serial_uart_thread)
-//lint -esym(759, abort_serial_uart_thread)
-//lint -esym(765, abort_serial_uart_thread)
-void abort_serial_uart_thread(void)
-{
-   abort_thread = 1 ;
-}
-
-//*****************************************************************************
-uint32_t uart_init(unsigned port_num, uint32_t baud_rate)
+static uint32_t uart_init(unsigned port_num, uint32_t baud_rate)
 {
 	// char sz_com_port[16];
 	DCB dcb;
@@ -217,7 +214,7 @@ uint32_t uart_init(unsigned port_num, uint32_t baud_rate)
 
 
 	//  spawn separate thread to listen on serial port
-	h_uart_rx_thread = (HANDLE)_beginthreadex(NULL, 0, uart_rx_thread, NULL, 0, NULL);
+   h_uart_rx_thread = (HANDLE)_beginthreadex(NULL, 0, uart_rx_thread, NULL, 0, NULL); //lint !e746 !e1055
 	if (0 == h_uart_rx_thread)
 	{
 		return 9;

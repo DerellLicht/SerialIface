@@ -1,12 +1,13 @@
 #include <windows.h>
 #include <stdio.h>
 #ifdef _lint
+#include <stdlib.h>  //  atoi
 #include <math.h>
 #endif
 
 #include "common.h"
 #include "serial_enum.h"
-#include "serial_test.h"
+#include "serial_iface.h"
 
 extern uint bytes_received ;
 
@@ -95,6 +96,11 @@ int main(int argc, char **argv)
              break ;
           curr_rx = bytes_received ;   
        }
+    }
+
+    abort_thread = 1 ;
+    while (abort_thread != 0) {
+        Sleep(100);
     }
       
     return 0;

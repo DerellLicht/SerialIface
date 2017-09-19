@@ -38,12 +38,12 @@ depend:
 #************************************************************
 
 $(BIN): $(OBJS)
-	gcc $(CFLAGS) -s $(OBJS) -o $@ -lsetupapi -lgdi32
+	g++ $(CFLAGS) -s $(OBJS) -o $@ -lsetupapi -lgdi32
 
 # DO NOT DELETE
 
-serial_test.o: common.h serial_enum.h
+serial_test.o: common.h serial_enum.h serial_iface.h
 serial_enum.o: common.h serial_enum.h
 serial_iface.o: common.h serial_enum.h
 common_funcs.o: common.h
-config.o: common.h
+config.o: common.h serial_iface.h

@@ -14,7 +14,7 @@
 #include <limits.h>  //  PATH_MAX
 
 #include "common.h"
-#include "serial_test.h"
+#include "serial_iface.h"
 
 //****************************************************************************
 static char ini_name[PATH_MAX+1] = "" ;
@@ -60,7 +60,7 @@ LRESULT save_cfg_file(void)
 LRESULT read_config_file(void)
 {
    char inpstr[128] ;
-   LRESULT result = derive_filename_from_exec(ini_name, (char *) ".ini") ;
+   LRESULT result = derive_filename_from_exec(ini_name, (char *) ".ini") ; //lint !e1773
    if (result != 0)
       return result;
 

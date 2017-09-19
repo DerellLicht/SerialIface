@@ -66,6 +66,11 @@
 #include "common.h"
 #include "serial_enum.h"
 
+//lint -esym(765, IsNumeric, UsingSetupAPI2, get_comm_num, get_comm_index, get_disp_path)
+//lint -esym(765, get_serial_port_number, unicode2ascii)
+//lint -esym(714, get_comm_num, get_comm_index, get_disp_path, get_serial_port_number)
+//lint -esym(759, get_serial_port_number)
+
 // The following define is from ntddser.h in the DDK. It is also
 // needed for serial port enumeration.
 //lint -esym(765, GUID_CLASS_COMPORT, GUID_DEVINTERFACE_COMPORT)
@@ -181,10 +186,10 @@ static unsigned port_enumerated(unsigned new_port)
 }
 
 //****************************************************************************
-void add_new_port(unsigned new_port)
+static void add_new_port(unsigned new_port)
 {
    // SSerInfo_p si = new SSerInfo_t ;
-   SSerInfo_p si = (SSerInfo_p) malloc(sizeof(SSerInfo_t)) ;
+   SSerInfo_p si = (SSerInfo_p) new SSerInfo_t ;
    memset((char *) si, 0, sizeof(SSerInfo_t)) ;
    wsprintf(si->strDevPath, _T("COM%u"), new_port) ;
    wsprintf(si->strFriendlyName, _T("unknown device (COM%u)"), new_port) ;
@@ -201,10 +206,10 @@ void add_new_port(unsigned new_port)
 }
 
 //****************************************************************************
-void add_new_port_name(unsigned new_port, TCHAR *pszFriendlyName)
+static void add_new_port_name(unsigned new_port, TCHAR *pszFriendlyName)
 {
    // SSerInfo_p si = new SSerInfo_t ;
-   SSerInfo_p si = (SSerInfo_p) malloc(sizeof(SSerInfo_t)) ;
+   SSerInfo_p si = (SSerInfo_p) new SSerInfo_t ;
    memset((char *) si, 0, sizeof(SSerInfo_t)) ;
    // wsprintf(si->strDevPath, "COM%u", new_port) ;
    wsprintf(si->strDevPath, _T("COM%u"), new_port) ;
@@ -238,10 +243,11 @@ void add_new_port_name(unsigned new_port, TCHAR *pszFriendlyName)
 //  Well, \\.\\COMx did not work under Vista
 //  
 //****************************************************************************
+//lint -esym(551, comm_port_avail)  data not accessed
 static unsigned comm_port_avail[256] ;
 
 //****************************************************************************
-BOOL IsPortAvailable(int nPort)
+static BOOL IsPortAvailable(int nPort)
 {
    TCHAR szPort[15];
    COMMCONFIG cc;
@@ -420,13 +426,15 @@ BOOL IsNumeric(LPCTSTR pszString, BOOL bIgnoreColon)
 //****************************************************************************
 //  from: http://www.naughter.com/enumser.html  
 //****************************************************************************
+//lint -esym(429, pGuids)  Custodial pointer has not been freed or returned
+
 // BOOL UsingSetupAPI2(unsigned *ports)
 BOOL UsingSetupAPI2(void)
 {
   BOOL bMoreItems ;
   GUID *pGuids ;
   HDEVINFO hDevInfoSet ;
-  int nIndex = 0;
+  int nIndex ;
   SP_DEVINFO_DATA devInfo;
   //First need to convert the name "Ports" to a GUID using SetupDiClassGuidsFromName
   DWORD dwGuids = 0;
@@ -440,9 +448,7 @@ BOOL UsingSetupAPI2(void)
 
   //Allocate the needed memory
   // GUID *pGuids = new GUID[dwGuids] ;
-  pGuids = (GUID *) malloc(dwGuids * sizeof(GUID)) ;
-  // ATL::CHeapPtr<GUID> pGuids;
-  // if (!pGuids.Allocate(dwGuids))
+  pGuids = (GUID *) new u8[dwGuids * sizeof(GUID)] ;  //lint !e433 Allocated area not large enough for pointer
   if (pGuids == NULL) {
       SetLastError(ERROR_OUTOFMEMORY);
       // puts("Out Of Memory") ;
@@ -556,6 +562,10 @@ BOOL UsingSetupAPI2(void)
 //  Now, I'm going to use the SPDRP_DEVICEDESC from each method
 //  to merge the two together and add the COMn port number to our data.
 //****************************************************************************
+//  later note: this is not currently used, but I'm retaining the code
+//              as an example of an alternate search method.
+//****************************************************************************
+//lint -esym(528, UsingSetupAPI1)
 static BOOL UsingSetupAPI1(void)
 {
    BOOL bMoreItems = TRUE;
@@ -663,9 +673,9 @@ static BOOL UsingSetupAPI1(void)
 //****************************************************************************
 //  Dig port data out of the registry
 //****************************************************************************
-static BOOL EnumPortsWdm(void)
+static bool EnumPortsWdm(void)
 {
-   BOOL bOk ;
+   bool bOk ;
    DWORD ii ;
    BOOL bSuccess ;
 
@@ -673,7 +683,7 @@ static BOOL EnumPortsWdm(void)
    DWORD dwDetDataSize ;
    // Create a device information set that will be the container for 
    // the device interfaces.
-   GUID *guidDev = (GUID*) &GUID_CLASS_COMPORT;
+   GUID *guidDev = (GUID*) &GUID_CLASS_COMPORT; //lint !e1773  Attempt to cast away const (or volatile)
 
    SP_DEVICE_INTERFACE_DETAIL_DATA *pDetData = NULL;
 
@@ -689,24 +699,24 @@ static BOOL EnumPortsWdm(void)
    }
 
    // Enumerate the serial ports
-   bOk = TRUE;
+   bOk = true;
    dwDetDataSize = sizeof(SP_DEVICE_INTERFACE_DETAIL_DATA) + 256;
    // pDetData = (SP_DEVICE_INTERFACE_DETAIL_DATA*) new char[dwDetDataSize];
-   pDetData = (SP_DEVICE_INTERFACE_DETAIL_DATA*) malloc(dwDetDataSize * sizeof(char));
+   pDetData = (SP_DEVICE_INTERFACE_DETAIL_DATA*) new u8[dwDetDataSize * sizeof(char)];
    // This is required, according to the documentation.  Yes, it's weird.
    ifcData.cbSize = sizeof(SP_DEVICE_INTERFACE_DATA);
    pDetData->cbSize = sizeof(SP_DEVICE_INTERFACE_DETAIL_DATA);
-   for (ii=0; bOk; ii++) {
-      bOk = SetupDiEnumDeviceInterfaces(hDevInfo, NULL, guidDev, ii, &ifcData);
+   for (ii=0; bOk; ii++) { //lint !e440
+      bOk = (bool) SetupDiEnumDeviceInterfaces(hDevInfo, NULL, guidDev, ii, &ifcData);
       if (bOk) {
          // Got a device. Get the details.
          SP_DEVINFO_DATA devdata = {sizeof(SP_DEVINFO_DATA)};  //lint !e785
-         bOk = SetupDiGetDeviceInterfaceDetail(hDevInfo,
+         bOk = (bool) SetupDiGetDeviceInterfaceDetail(hDevInfo,
             &ifcData, pDetData, dwDetDataSize, NULL, &devdata);
          if (bOk) {
             //  allocate initial struct
             // SSerInfo_p si = new SSerInfo_t ;
-            SSerInfo_p si = (SSerInfo_p) malloc(sizeof(SSerInfo_t)) ;
+            SSerInfo_p si = (SSerInfo_p) new SSerInfo_t ;
             memset((char *) si, 0, sizeof(SSerInfo_t)) ;
 
             // strncpy(si->strDevPath, pDetData->DevicePath, PATH_MAX);
@@ -748,41 +758,32 @@ static BOOL EnumPortsWdm(void)
                sp_tail = si ;
             }
 
-         }
+         }  //lint !e593
          else {
-            // strErr.Format("SetupDiGetDeviceInterfaceDetail failed. (err=%lx)",
-            //    GetLastError());
-            // throw strErr;
-            // syslog("SetupDiGetDeviceInterfaceDetail: %s\n", get_system_message()) ;
             goto error_exit;
          }
       }
       else {
          DWORD err = GetLastError();
          if (err != ERROR_NO_MORE_ITEMS) {
-            // strErr.Format("SetupDiEnumDeviceInterfaces failed. (err=%lx)", err);
-            // throw strErr;
-            // syslog("SetupDiEnumDeviceInterfaces: %s\n", get_system_message()) ;
             goto error_exit;
          }
       }
    }
-   if (pDetData != NULL)   //lint !e774
-      // delete [] (char*)pDetData;
-	  free( pDetData);
+   if (pDetData != NULL) {  //lint !e774
+      delete [] (char*)pDetData;
+   }
    if (hDevInfo != INVALID_HANDLE_VALUE)
       SetupDiDestroyDeviceInfoList(hDevInfo);
 
-   // if (!strErr.IsEmpty())
-   //    throw strErr;
-   return TRUE ;
+   return true ;
 error_exit:
-   if (pDetData != NULL)   //lint !e774
-      // delete [] (char*)pDetData;
-	  free (pDetData);
+   if (pDetData != NULL) {  //lint !e774
+      delete [] (char*)pDetData;
+   }
    if (hDevInfo != INVALID_HANDLE_VALUE)
       SetupDiDestroyDeviceInfoList(hDevInfo);
-   return FALSE;
+   return false;
 }
 
 //****************************************************************************
@@ -832,7 +833,8 @@ static void EnumSerialPorts(void)
    if (sp_top == 0)
       goto build_compatibility_mode;
 
-   //  look for other ports which do not enumerate
+   //  look for other ports which do not enumerate.
+   //  DDM 09/18/17 - why did I remove this??
    // CountCommPorts() ;
 
    //  test each port to see if it will enumerate

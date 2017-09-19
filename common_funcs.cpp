@@ -977,8 +977,6 @@ double dabs(double dvalue1, double dvalue2)
 //  - The other two forms take only buffer and length args,
 //    and implicitly print to either printf or syslog.
 //**********************************************************************
-static const int high_chars = 0 ; //  print using high-ascii chars, not used for now
-
 //lint -esym(714, hex_dump_addr)
 //lint -esym(759, hex_dump_addr)
 //lint -esym(765, hex_dump_addr)
@@ -1007,7 +1005,7 @@ int hex_dump_addr(u8 *bfr, int bytes, unsigned addr)
          plen += wsprintfA(&pstr[plen], "%02X ", chr) ;
          if (chr < 32) {
             len += wsprintfA(tail+len, ".") ;
-         } else if (chr < 127  ||  high_chars) {   //lint !e506 !e774
+         } else if (chr < 127) {
             len += wsprintfA(tail+len, "%c", chr) ;
          } else {
             len += wsprintfA(tail+len, "?") ;
