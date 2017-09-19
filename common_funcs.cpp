@@ -254,7 +254,6 @@ uint calc_elapsed_time(BOOL done)
    } else {
       u64 tf = proc_time() ;
       secs = (uint) ((tf - ti) / get_clocks_per_second()) ;
-      // syslog("send_serial_msg: %u seconds", secs) ;
    }
    return secs;
 }
@@ -272,7 +271,6 @@ uint calc_elapsed_msec(BOOL done)
    } else {
       u64 tf = proc_time() ;
       secs = (uint) ((tf - ti) / (get_clocks_per_second()/1000)) ;
-      // syslog("send_serial_msg: %u seconds", secs) ;
    }
    return secs;
 }
@@ -1037,6 +1035,9 @@ int hex_dump_addr(u8 *bfr, int bytes, unsigned addr)
 }
 
 //**************************************************************************
+//lint -esym(714, hex_dump)
+//lint -esym(759, hex_dump)
+//lint -esym(765, hex_dump)
 int hex_dump(u8 *bfr, int bytes)
 {
    return hex_dump_addr(bfr, bytes, 0) ;

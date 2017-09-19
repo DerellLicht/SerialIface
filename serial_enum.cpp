@@ -46,13 +46,12 @@
 // #define  STAND_ALONE		1
 #include <windows.h>
 #include <stdio.h>
-#include <tchar.h>
-#include <stdio.h>
 #ifdef _lint
 #include <stdlib.h>  //  atoi()
 #endif
 #include <limits.h>
 #include <ctype.h>
+#include <tchar.h>
 
 #ifndef  PATH_MAX
 #define  PATH_MAX    1024
@@ -260,6 +259,9 @@ BOOL IsPortAvailable(int nPort)
 //  which isn't entirely desireable.  However, it also turns up the
 //  Belkin USB-Serial Adapter, which the former function did not.
 //****************************************************************************
+//lint -esym(714, CountCommPorts)
+//lint -esym(759, CountCommPorts)
+//lint -esym(765, CountCommPorts)
 void CountCommPorts(void)
 {
    unsigned idx ;
@@ -360,6 +362,9 @@ static unsigned match_port_number(TCHAR *pszFriendlyName, unsigned nPort)
 }
 
 //***********************************************************************
+//lint -esym(714, fill_cport_combobox)
+//lint -esym(759, fill_cport_combobox)
+//lint -esym(765, fill_cport_combobox)
 void fill_cport_combobox(HWND hwnd, unsigned init_idx)
 {
    TCHAR cbentry[81] ;
@@ -786,8 +791,7 @@ error_exit:
 // occurred. If bIgnoreBusyPorts is TRUE, ports that can't
 // be opened for read/write access are not included.
 //****************************************************************************
-// void EnumSerialPorts(SSerInfo_p asi)
-void EnumSerialPorts(void)
+static void EnumSerialPorts(void)
 {
    SSerInfo_p rsi ;
    // Clear the output array
@@ -864,7 +868,7 @@ build_compatibility_mode:
    //  compatibility backup
    // if (sp_top == 0) {
    //    syslog("building default serial-port list\n") ;
-   //    unsigned j ;
+   //    unsigned j ; 
    //    for (j=1; j<=4; j++) {
    //       add_new_port(j) ;
    //    }
@@ -872,28 +876,17 @@ build_compatibility_mode:
 }
 
 //****************************************************************************
-static unsigned vci_ignore_port = 0 ;  //  COM0 is not valid
-
-void vci_set_ignore_index(unsigned uvalue)
-{
-   vci_ignore_port = uvalue ;
-   printf("\nignore serial port COM%u on name scans\n", vci_ignore_port);
-}
-
-//****************************************************************************
 unsigned get_serial_port_number(TCHAR *refname)
 {
    SSerInfo_p sptemp ;
    for (sptemp = sp_top; sptemp != 0; sptemp = sptemp->next) {
-      if (_tcsncmp(refname, sptemp->strFriendlyName, _tcslen(refname)) == 0  &&
-          sptemp->portnum != vci_ignore_port)
+      if (_tcsncmp(refname, sptemp->strFriendlyName, _tcslen(refname)) == 0)
          return sptemp->portnum ; 
    }
    return 0 ;
 }
 
 //****************************************************************************
-#define  MAX_UNICODE_LEN   1024
 char *unicode2ascii(WCHAR *UnicodeStr)
 {
    static char AsciiStr[MAX_UNICODE_LEN+1] ;

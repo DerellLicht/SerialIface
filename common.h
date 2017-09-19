@@ -65,6 +65,7 @@ extern const TCHAR  TTAB ;
 //*****************************************************************
 //  lookup-table struct, used for Windows Message handlers
 //*****************************************************************
+//lint -esym(756, winproc_table_s::win_code, winproc_table_s::winproc_func)
 //lint -esym(768, winproc_table_s::win_code, winproc_table_s::winproc_func)
 typedef struct winproc_table_s {
    uint win_code ;

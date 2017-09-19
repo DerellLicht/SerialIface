@@ -7,11 +7,14 @@
 #include "serial_enum.h"
 
 //******************************************************************************
-static HANDLE h_com_port = 0;
-// static HANDLE h_rx_event = 0;
+unsigned uart_comm_num = 1 ;
+unsigned uart_baud_rate = 115200 ;
+unsigned debug_level = 0 ;
 
+static HANDLE h_com_port = 0;
 static HANDLE h_uart_rx_thread;
 // static HANDLE h_run_rx_thread;
+// static HANDLE h_rx_event = 0;
 
 static unsigned abort_thread = 0 ;
 
@@ -97,46 +100,6 @@ int send_serial_msg_ascii(char *txbfr)
    return send_serial_msg(txbfr, strlen(txbfr));
 }
 
-//******************************************************************************
-// ignore serial port COM6 on name scans
-// Port   Opens  Enums  Device description
-// =====  =====  =====  ============================
-// COM6    YES    YES   USB Serial Port (COM6)                  // debug_port
-// COM4    YES    YES   USB Serial Port (COM4)                  // input_port ("COMn")
-// COM10   YES    no    TI CC2540 USB CDC Serial Port (COM10)   // BLE dongle
-// COM3    YES    no    Cypress USB UART (COM3)                 // debug-board port
-//******************************************************************************
-static char input_port_str[10] ;
-static unsigned serial_uart_num = 0 ;
-
-void select_serial_ports(void)
-{
-   unsigned port_num ;
-   //***********************************************************************************
-   //  Try to find the Reader serial port.
-   //  Be aware that if the debug-board monitor port is connected,
-   //  it will have the same description as this port.
-   //  In that case, user will need to either block the monitor port number
-   //  via --debug-port argument, or just specify this port using the --input-port argument.
-   //***********************************************************************************
-   port_num = get_serial_port_number(L"USB Serial Port");
-   if (port_num != 0) {
-      printf("found input port=%u\n", port_num);
-      sprintf(input_port_str, "COM%u", port_num);
-      // options->input_port = input_port_str ; 
-   }
-   //***********************************************************************************
-   //  Try to find the serial UART port 
-   //***********************************************************************************
-   port_num = get_serial_port_number(L"Cypress USB UART");
-   if (port_num != 0) {
-      printf("found serial UART port=%u\n", port_num);
-      serial_uart_num = port_num ; 
-      // sprintf(input_port_str, "COM%u", port_num);
-      // options->input_port = input_port_str ; 
-   }
-}  
-
 //*************************************************************************************
 uint bytes_received = 0 ;
 static void buffer_rx_char(char readBuffer)
@@ -196,6 +159,9 @@ static unsigned __stdcall uart_rx_thread(void *p_args)
 }
 
 //*****************************************************************************
+//lint -esym(714, abort_serial_uart_thread)
+//lint -esym(759, abort_serial_uart_thread)
+//lint -esym(765, abort_serial_uart_thread)
 void abort_serial_uart_thread(void)
 {
    abort_thread = 1 ;
@@ -261,15 +227,12 @@ uint32_t uart_init(unsigned port_num, uint32_t baud_rate)
 }
 
 //*****************************************************************************
-unsigned uart_baud_rate = 115200 ;
-unsigned debug_level = 0 ;
-
 int init_serial_uart(void)
 {
-   if (serial_uart_num == 0) {
-      printf("serial uart is not initialized\n");
+   if (uart_comm_num == 0) {
+      printf("serial uart number is not initialized\n");
       return 1;
    }
-   return (int) uart_init(serial_uart_num, uart_baud_rate) ;
+   return (int) uart_init(uart_comm_num, uart_baud_rate) ;
 }
 
