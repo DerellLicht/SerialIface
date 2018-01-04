@@ -24,7 +24,7 @@ static HANDLE h_uart_rx_thread;
 unsigned abort_thread = 0 ;
 
 //****************************************************************************
-static int send_serial_msg(char *txbfr, uint txbfr_len)
+int send_serial_msg(char *txbfr, uint txbfr_len)
 {
    int dwWritten = 0;
 
@@ -40,7 +40,7 @@ static int send_serial_msg(char *txbfr, uint txbfr_len)
       // if (GetLastError() != ERROR_WRITE_FAULT) {
          // WriteFile failed, but isn't delayed. Report error and abort.
          dwWritten = GetLastError() ;
-         syslog("WriteFile: %s\n", get_system_message(dwWritten)) ;
+         printf("WriteFile: %s\n", get_system_message(dwWritten)) ;
          dwWritten = -dwWritten ;
          // fRes = false;
       }
@@ -55,7 +55,7 @@ static int send_serial_msg(char *txbfr, uint txbfr_len)
             switch(dwRes) {
             case WAIT_TIMEOUT:
                if (++wait_seconds > 5) {
-                  syslog("send_serial_msg: write did not complete!\n") ;
+                  printf("send_serial_msg: write did not complete!\n") ;
                   dwWritten = -(int) WAIT_TIMEOUT ;
                   done = TRUE ;
                }
@@ -65,12 +65,12 @@ static int send_serial_msg(char *txbfr, uint txbfr_len)
             case WAIT_OBJECT_0:
                if (!GetOverlappedResult(h_com_port, &osWrite, (DWORD *) &dwWritten, FALSE)) {
                   dwWritten = GetLastError() ;
-                  syslog("GetOverlappedResult: %s\n", get_system_message(dwWritten)) ;
+                  printf("GetOverlappedResult: %s\n", get_system_message(dwWritten)) ;
                   dwWritten = -dwWritten ;
                }
                else {
                   // Write operation completed successfully.
-                  // syslog("Write: %u bytes sent\n", dwWritten) ;
+                  // printf("Write: %u bytes sent\n", dwWritten) ;
                   // fRes = true;
                }
                done = TRUE ;
@@ -81,7 +81,7 @@ static int send_serial_msg(char *txbfr, uint txbfr_len)
                // This usually indicates a problem with the
                // OVERLAPPED structure's event handle.
                dwWritten = GetLastError() ;
-               syslog("Write (W4SO): %s\n", get_system_message(dwWritten)) ;
+               printf("Write (W4SO): %s\n", get_system_message(dwWritten)) ;
                dwWritten = -dwWritten ;
                done = TRUE ;
                break;
@@ -90,7 +90,7 @@ static int send_serial_msg(char *txbfr, uint txbfr_len)
       }
    }
    // else {
-      // syslog ("WriteFile succeeded...\n");
+      // printf ("WriteFile succeeded...\n");
       // WriteFile completed immediately.
       // fRes = true;
    // }
@@ -100,18 +100,54 @@ static int send_serial_msg(char *txbfr, uint txbfr_len)
    return dwWritten;
 }
 
-//******************************************************************************
-int send_serial_msg_ascii(char *txbfr)
+//*************************************************************************************
+//  use circular buffer to process RX chars
+
+//*************************************************************************************
+#define  RX_BUFFER_LEN      128
+static uint8 rx_buffer[RX_BUFFER_LEN];
+static uint32 rx_put_idx = 0 ;
+static uint32 rx_get_idx = 0 ;
+static uint32 rx_count = 0 ;
+
+//*************************************************************************************
+static void buffer_rx_char(uint8 readByte)
 {
-   return send_serial_msg(txbfr, strlen(txbfr));
+    if (rx_count >= RX_BUFFER_LEN)
+    {
+        return ;
+    }
+    rx_buffer[rx_put_idx] = readByte ;
+    rx_put_idx++ ;
+    if (rx_put_idx >= RX_BUFFER_LEN)
+    {
+        rx_put_idx = 0 ;
+    }
+    rx_count++ ;
 }
 
 //*************************************************************************************
-uint bytes_received = 0 ;
-static void buffer_rx_char(char readBuffer)
+bool UART_hitc(void)
 {
-   putchar(readBuffer);
-   bytes_received++ ;
+    return (rx_count == 0) ? false : true ;
+}
+
+//*************************************************************************************
+uint8 UART_getc(void)
+{
+    if (rx_count == 0)
+    {
+        return 0;
+    }
+    uint8 chr = rx_buffer[rx_get_idx];
+    rx_get_idx++ ;
+    if (rx_get_idx >= RX_BUFFER_LEN)
+    {
+        rx_get_idx = 0 ;
+    }
+    rx_count-- ;
+    // printf("[%02X] ", chr);
+    return chr;
 }
 
 //*************************************************************************************

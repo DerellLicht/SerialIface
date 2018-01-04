@@ -1,5 +1,5 @@
 //****************************************************************************
-//  Copyright (c) 2008-2014  Daniel D Miller
+//  Copyright (c) 2008-2018  Daniel D Miller
 //  common_funcs.cpp - common functions for Windows and other programs.
 //  common.h - Contains Windows-specific and System-specific definitions
 //  This module, which has been entirely compiled from public-domain sources, 
@@ -9,9 +9,11 @@
 //****************************************************************************
 
 typedef unsigned char         u8 ;
+typedef unsigned char         uint8 ;
 typedef unsigned short        u16 ;
 typedef unsigned int          uint ;
-typedef unsigned long         u32 ;
+typedef unsigned int          uint32 ;
+typedef unsigned int          u32 ;
 typedef unsigned long long    u64 ;
 
 #define  STX      2

@@ -9,8 +9,6 @@
 #include "serial_enum.h"
 #include "serial_iface.h"
 
-extern uint bytes_received ;
-
 //************************************************************************
 static void usage(void)
 {
@@ -81,20 +79,39 @@ int main(int argc, char **argv)
     printf("serial_test: baudrate=%u, uart=COM%u\n", uart_baud_rate, uart_comm_num);
 
     // char *outmsg = "\n\r";
+    uint timeout_msec = 2000 ;
+    uint elapsed_time = 0 ;
     char outmsg[81];
     enumerate_serial_ports();
     result = init_serial_uart();
     if (result == 0) {
-       bytes_received = 0 ;
        sprintf(outmsg, "derelict\n\r");
        printf("\nsend %s", outmsg);      
-       send_serial_msg_ascii(outmsg);
-       uint curr_rx = bytes_received ; 
+       uint outlen = strlen(outmsg);
+       send_serial_msg(outmsg, outlen);
+
+       //  wait and see if we get teh same number of characters back
+       uint inpidx = 0 ;
        while (LOOP_FOREVER) {
-          Sleep(1500);
-          if (curr_rx == bytes_received)
+          if (UART_hitc()) {
+             uint8 inchr = UART_getc();
+             if (inchr == outmsg[inpidx]) {
+                inpidx++ ;
+                if (inpidx == outlen) {
+                   printf("good response received\n");
+                   break;
+                }
+             }
+             else
+             {
+                 printf("bad rx: idx %u: %02X vs %02X\n", inpidx, inchr, outmsg[inpidx]);
+                 break;
+             }
+          }
+          Sleep(100);
+          elapsed_time += 100 ;
+          if (elapsed_time >= timeout_msec)
              break ;
-          curr_rx = bytes_received ;   
        }
     }
 
