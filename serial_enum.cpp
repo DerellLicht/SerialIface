@@ -43,21 +43,14 @@
 
 // ************************************************************************
 
-// #define  STAND_ALONE		1
+// #define  STAND_ALONE    1
 #include <windows.h>
 #include <stdio.h>
 #ifdef _lint
 #include <stdlib.h>  //  atoi()
 #endif
-#include <limits.h>
 #include <ctype.h>
 #include <tchar.h>
-
-#ifndef  PATH_MAX
-#define  PATH_MAX    1024
-#endif
-
-// #include "wcommon.h"
 
 // The following includes are needed for serial port enumeration
 #include <initguid.h>   //  other GUIDs
@@ -89,8 +82,8 @@ typedef struct SSerInfo_s {
    struct SSerInfo_s *next ;
    unsigned index ;
    unsigned portnum ;
-   TCHAR strDevPath[PATH_MAX+1];          // Device path for use with CreateFile()
-   TCHAR strFriendlyName[PATH_MAX+1];     // Full name to be displayed to a user
+   TCHAR strDevPath[MAX_PATH_LEN+1];          // Device path for use with CreateFile()
+   TCHAR strFriendlyName[MAX_PATH_LEN+1];     // Full name to be displayed to a user
    BOOL bDeviceOpens;
    BOOL bEnumerates;
 } SSerInfo_t, *SSerInfo_p ;
@@ -533,7 +526,7 @@ BOOL UsingSetupAPI2(void)
          }  
          else {
            // sFriendlyNames.Add(_T(""));
-           // strncpy(si->strFriendlyName, "no name", PATH_MAX) ;
+           // strncpy(si->strFriendlyName, "no name", MAX_PATH_LEN) ;
             // printf("did NOT found port %u\n", nPort) ;
          }
 
@@ -644,14 +637,14 @@ static BOOL UsingSetupAPI1(void)
          DWORD dwType = 0;
          if (SetupDiGetDeviceRegistryProperty(hDevInfoSet, &devInfo, SPDRP_FRIENDLYNAME, &dwType, (PBYTE) pszFriendlyName, dwSize, &dwSize) && (dwType == REG_SZ))
            // sFriendlyNames.Add(pszFriendlyName);
-           // strncpy(si->strFriendlyName, pszFriendlyName, PATH_MAX) ;
+           // strncpy(si->strFriendlyName, pszFriendlyName, MAX_PATH_LEN) ;
          {
             // printf("\nfound port %u, %s\n", nPort, pszFriendlyName) ;
             match_port_number(pszFriendlyName, nPort) ;
          }  
          else {
            // sFriendlyNames.Add(_T(""));
-           // strncpy(si->strFriendlyName, "no name", PATH_MAX) ;
+           // strncpy(si->strFriendlyName, "no name", MAX_PATH_LEN) ;
          }
        }
      }   //  if device info acquired
@@ -719,11 +712,11 @@ static bool EnumPortsWdm(void)
             SSerInfo_p si = (SSerInfo_p) new SSerInfo_t ;
             memset((char *) si, 0, sizeof(SSerInfo_t)) ;
 
-            // strncpy(si->strDevPath, pDetData->DevicePath, PATH_MAX);
-            lstrcpyn(si->strDevPath, pDetData->DevicePath, PATH_MAX);
+            // strncpy(si->strDevPath, pDetData->DevicePath, MAX_PATH_LEN);
+            lstrcpyn(si->strDevPath, pDetData->DevicePath, MAX_PATH_LEN);
             // Got a path to the device. Try to get some more info.
             bSuccess = SetupDiGetDeviceRegistryProperty(hDevInfo, &devdata, 
-               SPDRP_FRIENDLYNAME, NULL, (PBYTE) si->strFriendlyName, PATH_MAX, NULL);
+               SPDRP_FRIENDLYNAME, NULL, (PBYTE) si->strFriendlyName, MAX_PATH_LEN, NULL);
             si->bEnumerates = TRUE ;
 
             //  SPDRP_DEVICEDESC is subset of SPDRP_FRIENDLYNAME

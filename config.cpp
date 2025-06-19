@@ -11,13 +11,13 @@
 #include <windows.h>
 #include <stdio.h>   //  fopen, etc
 #include <stdlib.h>  //  atoi()
-#include <limits.h>  //  PATH_MAX
+#include <limits.h>  //  MAX_PATH_LEN
 
 #include "common.h"
 #include "serial_iface.h"
 
 //****************************************************************************
-static char ini_name[PATH_MAX+1] = "" ;
+static char ini_name[MAX_PATH_LEN+1] = "" ;
 
 //****************************************************************************
 static void strip_comments(char *bfr)

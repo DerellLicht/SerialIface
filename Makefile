@@ -10,6 +10,7 @@ LFLAGS=-s
 endif
 CFLAGS += -DUNICODE -D_UNICODE
 CFLAGS += -Wno-write-strings
+CFLAGS += -Wno-stringop-truncation
 
 CSRC=serial_test.cpp serial_enum.cpp serial_iface.cpp common_funcs.cpp config.cpp
 
