@@ -1,3 +1,9 @@
+# DEPRECATED
+
+This repository is no longer maintained.
+
+---
+
 ## serial_test.cpp
 Performs write/read test on a serial port
 
